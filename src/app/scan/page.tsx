@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -29,25 +29,12 @@ type CheckInResponse = {
   check_in_time?: string
 }
 
-type StatsData = {
-  totalCheckedIn: number
-  totalRegistered: number
-  attendanceRate: string
-  recentCheckIns: Array<{
-    id: string
-    time: string
-    userName: string
-    universityId: string
-  }>
-}
-
 export default function ScanPage() {
   // Barcode scanner state
   const [barcodeInput, setBarcodeInput] = useState('')
   const barcodeInputRef = useRef<HTMLInputElement>(null)
   
   // Manual check-in state
-  const [showManualForm, setShowManualForm] = useState(false)
   const [manualUniversityId, setManualUniversityId] = useState('')
   const [manualName, setManualName] = useState('')
   
@@ -60,60 +47,29 @@ export default function ScanPage() {
   // Feedback state
   const [checkInStatus, setCheckInStatus] = useState<CheckInStatus>(null)
   const [statusMessage, setStatusMessage] = useState('')
-  
-  // Statistics state
-  const [stats, setStats] = useState<StatsData>({
-    totalCheckedIn: 0,
-    totalRegistered: 0,
-    attendanceRate: '0',
-    recentCheckIns: []
-  })
+  const [lastCheckedInUser, setLastCheckedInUser] = useState<{name?: string, universityId: string} | null>(null)
   
   const [isLoading, setIsLoading] = useState(false)
 
-  // Always keep focus on barcode input
+  // Always keep focus on barcode input when not in modal or manual form
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!showRegistrationModal && !showManualForm && barcodeInputRef.current) {
+      if (!showRegistrationModal && document.activeElement?.tagName !== 'INPUT' && barcodeInputRef.current) {
         barcodeInputRef.current.focus()
       }
-    }, 100)
+    }, 500)
     
     return () => clearInterval(interval)
-  }, [showRegistrationModal, showManualForm])
-
-  // Fetch statistics on mount and after each check-in
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/check-in/stats')
-      const data = await response.json()
-      if (response.ok && !data.error) {
-        setStats({
-          totalCheckedIn: data.totalCheckedIn || 0,
-          totalRegistered: data.totalRegistered || 0,
-          attendanceRate: data.attendanceRate || '0',
-          recentCheckIns: data.recentCheckIns || []
-        })
-      }
-    } catch (error) {
-      console.error('Failed to fetch stats:', error)
-      // Keep existing stats on error
-    }
-  }
-
-  useEffect(() => {
-    fetchStats()
-    const interval = setInterval(fetchStats, 5000) // Refresh every 5 seconds
-    return () => clearInterval(interval)
-  }, [])
+  }, [showRegistrationModal])
 
   // Clear status message after timeout
   useEffect(() => {
-    if (checkInStatus) {
+    if (checkInStatus && checkInStatus !== 'error') {
       const timer = setTimeout(() => {
         setCheckInStatus(null)
         setStatusMessage('')
-      }, 5000)
+        setLastCheckedInUser(null)
+      }, 10000) // Keep success messages for 10 seconds
       return () => clearTimeout(timer)
     }
   }, [checkInStatus, statusMessage])
@@ -141,10 +97,17 @@ export default function ScanPage() {
       } else if (data.status === 'checked_in') {
         setCheckInStatus('success')
         setStatusMessage(data.message || 'Successfully checked in')
-        fetchStats()
+        setLastCheckedInUser({
+          name: data.user?.name,
+          universityId: data.user?.university_id || ''
+        })
       } else if (data.status === 'already_checked_in') {
         setCheckInStatus('already')
         setStatusMessage(data.message || 'Already checked in today')
+        setLastCheckedInUser({
+          name: data.user?.name,
+          universityId: data.user?.university_id || ''
+        })
       }
     } catch (error) {
       setCheckInStatus('error')
@@ -196,8 +159,11 @@ export default function ScanPage() {
       if (response.ok) {
         setCheckInStatus('success')
         setStatusMessage(data.message || 'Successfully registered and checked in')
+        setLastCheckedInUser({
+          name: registerName || undefined,
+          universityId: registerUniversityId
+        })
         setShowRegistrationModal(false)
-        fetchStats()
       } else {
         setCheckInStatus('error')
         setStatusMessage(data.error || 'Registration failed')
@@ -233,14 +199,21 @@ export default function ScanPage() {
         if (data.status === 'checked_in') {
           setCheckInStatus('success')
           setStatusMessage(data.message || 'Successfully checked in')
+          setLastCheckedInUser({
+            name: data.user?.name || manualName || undefined,
+            universityId: data.user?.university_id || manualUniversityId
+          })
         } else if (data.status === 'already_checked_in') {
           setCheckInStatus('already')
           setStatusMessage(data.message || 'Already checked in today')
+          setLastCheckedInUser({
+            name: data.user?.name || manualName || undefined,
+            universityId: data.user?.university_id || manualUniversityId
+          })
         }
+        // Clear form on success
         setManualUniversityId('')
         setManualName('')
-        setShowManualForm(false)
-        fetchStats()
       } else {
         setCheckInStatus('error')
         setStatusMessage(data.error || 'Check-in failed')
@@ -250,7 +223,6 @@ export default function ScanPage() {
       setStatusMessage('Failed to process check-in')
     } finally {
       setIsLoading(false)
-      barcodeInputRef.current?.focus()
     }
   }
 
@@ -261,36 +233,21 @@ export default function ScanPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Event Check-in</h1>
-          <p className="text-muted-foreground mt-2">Scan ID cards or enter information manually</p>
+          <p className="text-muted-foreground mt-2">Process student check-ins using barcode scanner or manual entry</p>
         </div>
 
-        {/* Status Alert */}
-        {checkInStatus && (
-          <Alert className={`mb-6 ${
-            checkInStatus === 'success' ? 'border-green-500 bg-green-500/10' :
-            checkInStatus === 'already' ? 'border-yellow-500 bg-yellow-500/10' :
-            'border-red-500 bg-red-500/10'
-          }`}>
-            <AlertDescription className={
-              checkInStatus === 'success' ? 'text-green-500' :
-              checkInStatus === 'already' ? 'text-yellow-500' :
-              'text-red-500'
-            }>
-              {statusMessage}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Barcode Scanner Card */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Barcode Scanner Tile */}
           <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle>Barcode Scanner</CardTitle>
-              <CardDescription>Scan student ID cards for quick check-in</CardDescription>
+              <CardDescription>Scan student ID cards</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="barcode">Waiting for scan...</Label>
+                <Label htmlFor="barcode" className="text-sm text-muted-foreground">
+                  Waiting for scan...
+                </Label>
                 <Input
                   ref={barcodeInputRef}
                   id="barcode"
@@ -299,112 +256,133 @@ export default function ScanPage() {
                   onChange={handleBarcodeInputChange}
                   onKeyDown={handleBarcodeKeyDown}
                   placeholder="Scanner input appears here"
-                  className="bg-background border-input text-2xl py-6"
+                  className="bg-background border-input text-2xl py-8 text-center font-mono"
                   disabled={isLoading}
                   autoFocus
                   autoComplete="off"
                 />
-                <p className="text-sm text-muted-foreground">
-                  Scanner will auto-submit. Keep this field focused.
+                <p className="text-xs text-muted-foreground text-center">
+                  Keep this field focused for scanning
+                </p>
+                <p className="text-xs text-muted-foreground text-center mt-1 italic">
+                  Note: If scanner doesn't work, click inside the box above to refocus
                 </p>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="pt-4 border-t border-border">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowManualForm(!showManualForm)}
-                  className="w-full"
-                >
-                  {showManualForm ? 'Hide Manual Entry' : 'Manual Entry (No ID Card)'}
-                </Button>
+          {/* Manual Entry Tile */}
+          <Card className="border-border bg-card">
+            <CardHeader>
+              <CardTitle>Manual Entry</CardTitle>
+              <CardDescription>For students without ID cards</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="manual-uid">University ID *</Label>
+                <Input
+                  id="manual-uid"
+                  type="text"
+                  value={manualUniversityId}
+                  onChange={(e) => setManualUniversityId(e.target.value)}
+                  placeholder="Enter university ID"
+                  className="bg-background border-input"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && manualUniversityId.trim()) {
+                      handleManualCheckIn()
+                    }
+                  }}
+                />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="manual-name">Name (Optional)</Label>
+                <Input
+                  id="manual-name"
+                  type="text"
+                  value={manualName}
+                  onChange={(e) => setManualName(e.target.value)}
+                  placeholder="Enter student name"
+                  className="bg-background border-input"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && manualUniversityId.trim()) {
+                      handleManualCheckIn()
+                    }
+                  }}
+                />
+              </div>
+              <Button
+                onClick={handleManualCheckIn}
+                disabled={!manualUniversityId.trim() || isLoading}
+                className="w-full"
+              >
+                Check In
+              </Button>
+            </CardContent>
+          </Card>
 
-              {/* Manual Check-in Form */}
-              {showManualForm && (
-                <div className="space-y-4 p-4 border border-border rounded-lg bg-background/50">
-                  <div className="space-y-2">
-                    <Label htmlFor="manual-uid">University ID</Label>
-                    <Input
-                      id="manual-uid"
-                      type="text"
-                      value={manualUniversityId}
-                      onChange={(e) => setManualUniversityId(e.target.value)}
-                      placeholder="Enter university ID"
-                      className="bg-background border-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="manual-name">Name (Optional)</Label>
-                    <Input
-                      id="manual-name"
-                      type="text"
-                      value={manualName}
-                      onChange={(e) => setManualName(e.target.value)}
-                      placeholder="Enter name"
-                      className="bg-background border-input"
-                    />
-                  </div>
-                  <Button
-                    onClick={handleManualCheckIn}
-                    disabled={!manualUniversityId.trim() || isLoading}
-                    className="w-full"
-                  >
-                    Check In Manually
-                  </Button>
+          {/* Confirmation/Status Tile */}
+          <Card className={`border-border bg-card ${
+            checkInStatus === 'success' ? 'border-green-500/50' :
+            checkInStatus === 'already' ? 'border-yellow-500/50' :
+            checkInStatus === 'error' ? 'border-red-500/50' : ''
+          }`}>
+            <CardHeader>
+              <CardTitle>Check-in Status</CardTitle>
+              <CardDescription>Latest check-in confirmation</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center min-h-[250px] text-center">
+              {checkInStatus ? (
+                <div className="space-y-4">
+                  {checkInStatus === 'success' && (
+                    <>
+                      <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+                      <div>
+                        <p className="text-lg font-semibold text-green-500">Success!</p>
+                        <p className="text-sm text-muted-foreground mt-2">{statusMessage}</p>
+                        {lastCheckedInUser && (
+                          <div className="mt-4 p-3 bg-background rounded-lg">
+                            <p className="font-medium">{lastCheckedInUser.name || 'Student'}</p>
+                            <p className="text-sm text-muted-foreground">{lastCheckedInUser.universityId}</p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {checkInStatus === 'already' && (
+                    <>
+                      <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto" />
+                      <div>
+                        <p className="text-lg font-semibold text-yellow-500">Already Checked In</p>
+                        <p className="text-sm text-muted-foreground mt-2">{statusMessage}</p>
+                        {lastCheckedInUser && (
+                          <div className="mt-4 p-3 bg-background rounded-lg">
+                            <p className="font-medium">{lastCheckedInUser.name || 'Student'}</p>
+                            <p className="text-sm text-muted-foreground">{lastCheckedInUser.universityId}</p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {checkInStatus === 'error' && (
+                    <>
+                      <XCircle className="w-16 h-16 text-red-500 mx-auto" />
+                      <div>
+                        <p className="text-lg font-semibold text-red-500">Error</p>
+                        <p className="text-sm text-muted-foreground mt-2">{statusMessage}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="text-muted-foreground">
+                  <div className="w-16 h-16 border-4 border-dashed border-border rounded-full mx-auto mb-4" />
+                  <p>Ready for check-in</p>
+                  <p className="text-sm mt-2">Scan a barcode or use manual entry</p>
                 </div>
               )}
             </CardContent>
           </Card>
-
-          {/* Recent Check-ins Card */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle>Recent Check-ins</CardTitle>
-              <CardDescription>Latest student check-ins</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {stats.recentCheckIns.length > 0 ? (
-                  stats.recentCheckIns.map((checkIn) => (
-                    <div key={checkIn.id} className="flex justify-between items-center p-2 rounded bg-background/50">
-                      <div>
-                        <p className="font-medium">{checkIn.userName}</p>
-                        <p className="text-sm text-muted-foreground">{checkIn.universityId}</p>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{checkIn.time}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No check-ins yet today</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
-
-        {/* Statistics Card */}
-        <Card className="border-border bg-card mt-6">
-          <CardHeader>
-            <CardTitle>Today\'s Statistics</CardTitle>
-            <CardDescription>Current event check-in summary</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Registered</p>
-                <p className="text-2xl font-bold">{stats.totalRegistered}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Checked In Today</p>
-                <p className="text-2xl font-bold">{stats.totalCheckedIn}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Attendance Rate</p>
-                <p className="text-2xl font-bold">{stats.attendanceRate}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </main>
 
       {/* Registration Modal */}
@@ -413,7 +391,7 @@ export default function ScanPage() {
           <DialogHeader>
             <DialogTitle>New User Registration</DialogTitle>
             <DialogDescription>
-              This barcode is not registered. Please enter the user\'s information.
+              This barcode is not registered. Please enter the student's information.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -436,7 +414,7 @@ export default function ScanPage() {
                 type="text"
                 value={registerName}
                 onChange={(e) => setRegisterName(e.target.value)}
-                placeholder="Enter name"
+                placeholder="Enter student name"
                 className="bg-background border-input"
               />
             </div>
