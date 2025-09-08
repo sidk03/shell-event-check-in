@@ -69,7 +69,7 @@ export default function ScanPage() {
         setCheckInStatus(null)
         setStatusMessage('')
         setLastCheckedInUser(null)
-      }, 10000) // Keep success messages for 10 seconds
+      }, 5000) // Keep success messages for 10 seconds
       return () => clearTimeout(timer)
     }
   }, [checkInStatus, statusMessage])
