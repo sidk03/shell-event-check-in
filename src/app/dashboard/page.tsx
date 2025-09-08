@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import Header from '@/components/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, UserCheck, TrendingUp, Clock } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Users, Clock, Search, Calendar } from 'lucide-react'
 
 type StatsData = {
   totalCheckedIn: number
@@ -12,10 +14,26 @@ type StatsData = {
   recentCheckIns: Array<{
     id: string
     time: string
+    timeStamp?: string
     userName: string
-    universityId: string
   }>
   date: string
+}
+
+type UserHistory = {
+  user: {
+    id: string
+    name?: string
+    universityId: string
+    barcodeId?: number
+  }
+  checkIns: Array<{
+    id: string
+    date: string
+    time: string
+    dateTime: string
+  }>
+  totalCheckIns: number
 }
 
 export default function DashboardPage() {
@@ -26,6 +44,11 @@ export default function DashboardPage() {
     recentCheckIns: [],
     date: new Date().toISOString().split('T')[0]
   })
+
+  const [searchUniversityId, setSearchUniversityId] = useState('')
+  const [userHistory, setUserHistory] = useState<UserHistory | null>(null)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchError, setSearchError] = useState('')
 
   // Fetch statistics
   const fetchStats = async () => {
@@ -46,6 +69,40 @@ export default function DashboardPage() {
     }
   }
 
+  // Search user history
+  const searchUserHistory = async () => {
+    if (!searchUniversityId.trim()) {
+      setSearchError('Please enter a University ID')
+      return
+    }
+
+    setIsSearching(true)
+    setSearchError('')
+    setUserHistory(null)
+
+    try {
+      const response = await fetch(`/api/users/history?university_id=${encodeURIComponent(searchUniversityId)}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setUserHistory(data)
+      } else {
+        setSearchError(data.error || 'User not found')
+      }
+    } catch (error) {
+      setSearchError('Failed to fetch user history')
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Clear search results
+  const clearSearch = () => {
+    setSearchUniversityId('')
+    setUserHistory(null)
+    setSearchError('')
+  }
+
   useEffect(() => {
     fetchStats()
     const interval = setInterval(fetchStats, 5000) // Refresh every 5 seconds
@@ -59,136 +116,173 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Event check-in statistics and analytics for {stats.date}</p>
+          <p className="text-muted-foreground mt-2">Event statistics and check-in management</p>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Registered</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalRegistered}</div>
-              <p className="text-xs text-muted-foreground">Students in database</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-8">
+          {/* Section 1: Total Registrations and Event History */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Total Registrations */}
+            <Card className="border-border bg-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Registered Students</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">{stats.totalRegistered}</div>
+                <p className="text-xs text-muted-foreground mt-1">Students in database</p>
+              </CardContent>
+            </Card>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Checked In Today</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCheckedIn}</div>
-              <p className="text-xs text-muted-foreground">Students checked in</p>
-            </CardContent>
-          </Card>
+            {/* Event History */}
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <CardTitle>Event History</CardTitle>
+                <CardDescription>Today's event attendance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Date</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(stats.date).toLocaleDateString('en-US', { 
+                        weekday: 'long',
+                        month: 'long', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Attendance</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {stats.totalCheckedIn} / {stats.totalRegistered} ({stats.attendanceRate}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-background rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(parseFloat(stats.attendanceRate), 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.attendanceRate}%</div>
-              <p className="text-xs text-muted-foreground">Of registered students</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Check-in Status</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-500">Active</div>
-              <p className="text-xs text-muted-foreground">System operational</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Recent Check-ins */}
+          {/* Section 2: Recent Check-ins */}
           <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle>Recent Check-ins</CardTitle>
-              <CardDescription>Latest student check-ins for today</CardDescription>
+              <CardDescription>Latest students checked in today</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-2">
                 {stats.recentCheckIns.length > 0 ? (
-                  stats.recentCheckIns.map((checkIn) => (
-                    <div key={checkIn.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50 hover:bg-background transition-colors">
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{checkIn.userName}</p>
-                        <p className="text-sm text-muted-foreground">{checkIn.universityId}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-medium text-muted-foreground">{checkIn.time}</span>
-                      </div>
+                  stats.recentCheckIns.slice(0, 5).map((checkIn) => (
+                    <div 
+                      key={checkIn.id} 
+                      className="flex items-center justify-between py-2 px-3 rounded bg-background/50"
+                    >
+                      <span className="font-medium text-sm">{checkIn.userName}</span>
+                      <span className="text-sm text-muted-foreground">{checkIn.time}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No check-ins yet today</p>
-                    <p className="text-sm mt-1">Check-ins will appear here in real-time</p>
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">No check-ins yet today</p>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Quick Stats Summary */}
+          {/* Section 3: Check-in History Lookup */}
           <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle>Event Overview</CardTitle>
-              <CardDescription>Summary of today's event activity</CardDescription>
+              <CardTitle>Check-in History Lookup</CardTitle>
+              <CardDescription>Search for a student's check-in history by University ID</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-muted-foreground">Event Date</span>
-                  <span className="font-medium">{new Date(stats.date).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}</span>
-                </div>
-                
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-muted-foreground">Check-in Progress</span>
-                  <span className="font-medium">{stats.totalCheckedIn} / {stats.totalRegistered}</span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Attendance</span>
-                    <span className="text-sm font-medium">{stats.attendanceRate}%</span>
-                  </div>
-                  <div className="w-full bg-background rounded-full h-2">
-                    <div 
-                      className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(parseFloat(stats.attendanceRate), 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 space-y-2">
-                  <h4 className="text-sm font-medium">Quick Actions</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button className="p-2 text-sm bg-background hover:bg-accent rounded-md transition-colors text-center">
-                      Export Data
-                    </button>
-                    <button className="p-2 text-sm bg-background hover:bg-accent rounded-md transition-colors text-center">
-                      View Reports
-                    </button>
-                  </div>
-                </div>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={searchUniversityId}
+                  onChange={(e) => setSearchUniversityId(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchUserHistory()}
+                  placeholder="Enter University ID"
+                  className="bg-background border-input"
+                />
+                <Button
+                  onClick={searchUserHistory}
+                  disabled={isSearching}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
+                </Button>
+                {(userHistory || searchError) && (
+                  <Button
+                    onClick={clearSearch}
+                    variant="outline"
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
+
+              {searchError && (
+                <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md">
+                  {searchError}
+                </div>
+              )}
+
+              {userHistory && (
+                <div className="p-4 bg-background rounded-lg border border-border">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold text-lg">{userHistory.user.name || 'Unknown Student'}</h4>
+                      <p className="text-sm text-muted-foreground">University ID: {userHistory.user.universityId}</p>
+                      {userHistory.user.barcodeId && (
+                        <p className="text-xs text-muted-foreground mt-1">Barcode: {userHistory.user.barcodeId}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold">{userHistory.totalCheckIns}</p>
+                      <p className="text-xs text-muted-foreground">Total Check-ins</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium text-muted-foreground mb-2">History</h5>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {userHistory.checkIns.length > 0 ? (
+                        userHistory.checkIns.map((checkIn) => (
+                          <div key={checkIn.id} className="flex items-center justify-between py-2 px-3 rounded bg-background/50">
+                            <span className="text-sm">
+                              {new Date(checkIn.date).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                            <span className="text-sm text-muted-foreground">{checkIn.time}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">No check-ins found</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

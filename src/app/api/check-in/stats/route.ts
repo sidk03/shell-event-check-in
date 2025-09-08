@@ -31,21 +31,21 @@ export async function GET(request: NextRequest) {
       throw recentError
     }
 
-    // Get user details for recent check-ins
+    // Get user details for recent check-ins (without university IDs for privacy)
     const formattedRecentCheckIns = []
     if (recentCheckIns && recentCheckIns.length > 0) {
       for (const checkIn of recentCheckIns) {
         const { data: user } = await supabase
           .from('users')
-          .select('id, name, university_id')
+          .select('id, name')
           .eq('id', checkIn.user_id)
           .single()
 
         formattedRecentCheckIns.push({
           id: checkIn.id,
           time: new Date(checkIn.check_in_time).toLocaleTimeString(),
-          userName: user?.name || 'Unknown',
-          universityId: user?.university_id || 'N/A'
+          timeStamp: checkIn.check_in_time,
+          userName: user?.name || 'Student'
         })
       }
     }

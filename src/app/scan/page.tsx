@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, ScanLine } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -234,18 +234,30 @@ export default function ScanPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Event Check-in</h1>
           <p className="text-muted-foreground mt-2">Process student check-ins using barcode scanner or manual entry</p>
+          <p className="text-sm text-muted-foreground mt-1">To view check-in history and statistics, go to the <a href="/dashboard" className="underline hover:text-foreground">Dashboard</a></p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Barcode Scanner Tile */}
           <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle>Barcode Scanner</CardTitle>
-              <CardDescription>Scan student ID cards</CardDescription>
+            <CardHeader className="relative">
+              <div className="absolute top-4 right-4">
+                <span className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 text-green-500 text-xs font-semibold rounded-full animate-pulse">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  READY
+                </span>
+              </div>
+              <CardTitle className="text-xl">Barcode Scanner</CardTitle>
+              <CardDescription className="text-base">Scan student ID cards</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="barcode" className="text-sm text-muted-foreground">
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  <div className="animate-pulse">
+                    <ScanLine className="w-16 h-16 text-primary/60" />
+                  </div>
+                </div>
+                <Label htmlFor="barcode" className="text-base text-muted-foreground text-center block">
                   Waiting for scan...
                 </Label>
                 <Input
@@ -274,12 +286,12 @@ export default function ScanPage() {
           {/* Manual Entry Tile */}
           <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle>Manual Entry</CardTitle>
-              <CardDescription>For students without ID cards</CardDescription>
+              <CardTitle className="text-xl">Manual Entry</CardTitle>
+              <CardDescription className="text-base">For students without ID cards</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="manual-uid">University ID *</Label>
+                <Label htmlFor="manual-uid" className="text-base">University ID *</Label>
                 <Input
                   id="manual-uid"
                   type="text"
@@ -295,7 +307,7 @@ export default function ScanPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="manual-name">Name (Optional)</Label>
+                <Label htmlFor="manual-name" className="text-base">Name (Optional)</Label>
                 <Input
                   id="manual-name"
                   type="text"
@@ -327,8 +339,8 @@ export default function ScanPage() {
             checkInStatus === 'error' ? 'border-red-500/50' : ''
           }`}>
             <CardHeader>
-              <CardTitle>Check-in Status</CardTitle>
-              <CardDescription>Latest check-in confirmation</CardDescription>
+              <CardTitle className="text-xl">Check-in Status</CardTitle>
+              <CardDescription className="text-base">Latest check-in confirmation</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center min-h-[250px] text-center">
               {checkInStatus ? (
@@ -337,12 +349,12 @@ export default function ScanPage() {
                     <>
                       <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
                       <div>
-                        <p className="text-lg font-semibold text-green-500">Success!</p>
-                        <p className="text-sm text-muted-foreground mt-2">{statusMessage}</p>
+                        <p className="text-xl font-semibold text-green-500">Success!</p>
+                        <p className="text-base text-muted-foreground mt-2">{statusMessage}</p>
                         {lastCheckedInUser && (
                           <div className="mt-4 p-3 bg-background rounded-lg">
-                            <p className="font-medium">{lastCheckedInUser.name || 'Student'}</p>
-                            <p className="text-sm text-muted-foreground">{lastCheckedInUser.universityId}</p>
+                            <p className="font-medium text-lg">{lastCheckedInUser.name || 'Student'}</p>
+                            <p className="text-base text-muted-foreground">{lastCheckedInUser.universityId}</p>
                           </div>
                         )}
                       </div>
@@ -352,12 +364,12 @@ export default function ScanPage() {
                     <>
                       <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto" />
                       <div>
-                        <p className="text-lg font-semibold text-yellow-500">Already Checked In</p>
-                        <p className="text-sm text-muted-foreground mt-2">{statusMessage}</p>
+                        <p className="text-xl font-semibold text-yellow-500">Already Checked In</p>
+                        <p className="text-base text-muted-foreground mt-2">{statusMessage}</p>
                         {lastCheckedInUser && (
                           <div className="mt-4 p-3 bg-background rounded-lg">
-                            <p className="font-medium">{lastCheckedInUser.name || 'Student'}</p>
-                            <p className="text-sm text-muted-foreground">{lastCheckedInUser.universityId}</p>
+                            <p className="font-medium text-lg">{lastCheckedInUser.name || 'Student'}</p>
+                            <p className="text-base text-muted-foreground">{lastCheckedInUser.universityId}</p>
                           </div>
                         )}
                       </div>
@@ -367,8 +379,8 @@ export default function ScanPage() {
                     <>
                       <XCircle className="w-16 h-16 text-red-500 mx-auto" />
                       <div>
-                        <p className="text-lg font-semibold text-red-500">Error</p>
-                        <p className="text-sm text-muted-foreground mt-2">{statusMessage}</p>
+                        <p className="text-xl font-semibold text-red-500">Error</p>
+                        <p className="text-base text-muted-foreground mt-2">{statusMessage}</p>
                       </div>
                     </>
                   )}
@@ -376,8 +388,8 @@ export default function ScanPage() {
               ) : (
                 <div className="text-muted-foreground">
                   <div className="w-16 h-16 border-4 border-dashed border-border rounded-full mx-auto mb-4" />
-                  <p>Ready for check-in</p>
-                  <p className="text-sm mt-2">Scan a barcode or use manual entry</p>
+                  <p className="text-lg">Ready for check-in</p>
+                  <p className="text-base mt-2">Scan a barcode or use manual entry</p>
                 </div>
               )}
             </CardContent>
