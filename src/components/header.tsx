@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { ScanLine, LayoutDashboard, LogOut } from 'lucide-react'
 
 export default function Header() {
   const router = useRouter()
@@ -15,8 +16,8 @@ export default function Header() {
   }
 
   const navItems = [
-    { href: '/scan', label: 'Scan' },
-    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/scan', label: 'Scan', icon: ScanLine },
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   ]
 
   return (
@@ -34,19 +35,23 @@ export default function Header() {
             />
             
             <nav className="flex items-center space-x-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    pathname === item.href
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      pathname === item.href
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                )
+              })}
             </nav>
           </div>
           
@@ -55,6 +60,7 @@ export default function Header() {
             variant="outline"
             className="border-border hover:bg-accent"
           >
+            <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
         </div>
