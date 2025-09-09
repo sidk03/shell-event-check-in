@@ -129,13 +129,15 @@ export default function DashboardPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Total Registrations */}
             <Card className="border-border bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Registered Students</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle>Total Registered Students</CardTitle>
+                <CardDescription>Students in database</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold">{stats.totalRegistered}</div>
-                <p className="text-xs text-muted-foreground mt-1">Students in database</p>
+                <div className="flex items-center justify-between">
+                  <div className="text-4xl font-bold">{stats.totalRegistered}</div>
+                  <Users className="h-8 w-8 text-muted-foreground" />
+                </div>
               </CardContent>
             </Card>
 
