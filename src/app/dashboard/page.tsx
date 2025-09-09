@@ -54,7 +54,9 @@ export default function DashboardPage() {
   // Fetch statistics
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/check-in/stats')
+      const response = await fetch('/api/check-in/stats', {
+        credentials: 'same-origin'
+      })
       const data = await response.json()
       if (response.ok && !data.error) {
         setStats({
@@ -82,7 +84,9 @@ export default function DashboardPage() {
     setUserHistory(null)
 
     try {
-      const response = await fetch(`/api/users/history?university_id=${encodeURIComponent(searchUniversityId)}`)
+      const response = await fetch(`/api/users/history?university_id=${encodeURIComponent(searchUniversityId)}`, {
+        credentials: 'same-origin'
+      })
       const data = await response.json()
       
       if (response.ok) {

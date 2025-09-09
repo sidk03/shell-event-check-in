@@ -83,6 +83,7 @@ export default function ScanPage() {
       const response = await fetch('/api/check-in/barcode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ barcode_id: value })
       })
       
@@ -157,6 +158,7 @@ export default function ScanPage() {
       const response = await fetch('/api/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({
           barcode_id: pendingBarcodeId,
           university_id: registerUniversityId,
@@ -197,6 +199,7 @@ export default function ScanPage() {
       const response = await fetch('/api/check-in/manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({
           university_id: manualUniversityId,
           name: manualName
@@ -261,6 +264,11 @@ export default function ScanPage() {
           <h1 className="text-3xl font-bold text-foreground">Event Check-in</h1>
           <p className="text-muted-foreground mt-2">Process student check-ins using barcode scanner or manual entry</p>
           <p className="text-sm text-muted-foreground mt-1">To view check-in history and statistics, go to the <a href="/dashboard" className="underline hover:text-foreground">Dashboard</a></p>
+          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+              <strong>Note:</strong> This is a new system. The first time you scan your ID, you will need to enter your University ID to link it to your barcode.
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
