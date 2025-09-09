@@ -234,6 +234,8 @@ export default function ScanPage() {
         // Clear form on success
         setManualUniversityId('')
         setManualName('')
+        // Refocus on barcode input
+        barcodeInputRef.current?.focus()
       } else {
         setCheckInStatus('error')
         setStatusMessage(data.error || 'Check-in failed')
@@ -243,6 +245,10 @@ export default function ScanPage() {
       setStatusMessage('Failed to process check-in')
     } finally {
       setIsLoading(false)
+      // Always refocus on barcode input after manual check-in attempt
+      setTimeout(() => {
+        barcodeInputRef.current?.focus()
+      }, 100)
     }
   }
 
