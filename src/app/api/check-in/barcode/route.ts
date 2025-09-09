@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getTodayInEST } from '@/lib/dateUtils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,9 +42,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get today's date in the database timezone
-    const today = new Date()
-    const dateString = today.toISOString().split('T')[0]
+    // Get today's date in EST
+    const dateString = getTodayInEST()
 
     // Check if user already checked in today
     const { data: existingCheckIn, error: checkInError } = await supabase

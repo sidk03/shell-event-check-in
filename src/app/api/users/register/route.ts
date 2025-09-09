@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getTodayInEST } from '@/lib/dateUtils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,8 +69,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create check-in for existing user
-      const today = new Date()
-      const dateString = today.toISOString().split('T')[0]
+      const dateString = getTodayInEST()
 
       // Check if already checked in today
       const { data: existingCheckIn } = await supabase
@@ -144,8 +144,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create first check-in
-    const today = new Date()
-    const dateString = today.toISOString().split('T')[0]
+    const dateString = getTodayInEST()
 
     const { error: checkInError } = await supabase
       .from('check_ins')

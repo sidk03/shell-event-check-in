@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Users, Clock, Search, Calendar } from 'lucide-react'
+import { formatDateInEST } from '@/lib/dateUtils'
 
 type StatsData = {
   totalCheckedIn: number
@@ -148,12 +149,7 @@ export default function DashboardPage() {
                       <span className="text-sm font-medium">Date</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {new Date(stats.date).toLocaleDateString('en-US', { 
-                        weekday: 'long',
-                        month: 'long', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
+                      {formatDateInEST(stats.date)}
                     </span>
                   </div>
                   <div className="space-y-2">
