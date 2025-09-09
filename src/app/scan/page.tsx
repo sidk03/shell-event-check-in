@@ -103,7 +103,17 @@ export default function ScanPage() {
         })
       } else if (data.status === 'already_checked_in') {
         setCheckInStatus('already')
-        setStatusMessage(data.message || 'Already checked in today')
+        // Format the check-in time if provided
+        let message = data.message || 'Already checked in today'
+        if (data.check_in_time) {
+          const localTime = new Date(data.check_in_time).toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          })
+          message = `Already checked in today at ${localTime}`
+        }
+        setStatusMessage(message)
         setLastCheckedInUser({
           name: data.user?.name,
           universityId: data.user?.university_id || ''
@@ -205,7 +215,17 @@ export default function ScanPage() {
           })
         } else if (data.status === 'already_checked_in') {
           setCheckInStatus('already')
-          setStatusMessage(data.message || 'Already checked in today')
+          // Format the check-in time if provided
+          let message = data.message || 'Already checked in today'
+          if (data.check_in_time) {
+            const localTime = new Date(data.check_in_time).toLocaleTimeString([], {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            })
+            message = `Already checked in today at ${localTime}`
+          }
+          setStatusMessage(message)
           setLastCheckedInUser({
             name: data.user?.name || manualName || undefined,
             universityId: data.user?.university_id || manualUniversityId

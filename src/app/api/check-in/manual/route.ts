@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
             university_id: user.university_id
           },
           check_in_time: existingCheckIn.check_in_time,
-          message: `Already checked in today at ${new Date(existingCheckIn.check_in_time).toLocaleTimeString()}`
+          message: `Already checked in today`
         },
         { status: 200 }
       )

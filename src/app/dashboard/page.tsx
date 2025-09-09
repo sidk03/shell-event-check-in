@@ -189,7 +189,13 @@ export default function DashboardPage() {
                       className="flex items-center justify-between py-2 px-3 rounded bg-background/50"
                     >
                       <span className="font-medium text-sm">{checkIn.userName}</span>
-                      <span className="text-sm text-muted-foreground">{checkIn.time}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(checkIn.time).toLocaleTimeString([], { 
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true 
+                        })}
+                      </span>
                     </div>
                   ))
                 ) : (
@@ -269,7 +275,13 @@ export default function DashboardPage() {
                                 year: 'numeric'
                               })}
                             </span>
-                            <span className="text-sm text-muted-foreground">{checkIn.time}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(checkIn.time).toLocaleTimeString([], { 
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
+                            </span>
                           </div>
                         ))
                       ) : (

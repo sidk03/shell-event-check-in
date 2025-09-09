@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const formattedCheckIns = checkIns?.map(checkIn => ({
       id: checkIn.id,
       date: checkIn.check_in_date,
-      time: new Date(checkIn.check_in_time).toLocaleTimeString(),
+      time: checkIn.check_in_time,  // Send raw timestamp for client-side formatting
       dateTime: checkIn.check_in_time
     })) || []
 

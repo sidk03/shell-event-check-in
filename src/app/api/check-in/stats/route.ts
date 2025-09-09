@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
         formattedRecentCheckIns.push({
           id: checkIn.id,
-          time: new Date(checkIn.check_in_time).toLocaleTimeString(),
+          time: checkIn.check_in_time,  // Send raw timestamp for client-side formatting
           timeStamp: checkIn.check_in_time,
           userName: user?.name || 'Student'
         })
