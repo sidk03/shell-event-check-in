@@ -28,6 +28,9 @@ export async function middleware(request: NextRequest) {
 
     const payload = verifyToken(token)
     if (!payload) {
+      console.log('Token verification failed for token:', token.substring(0, 20) + '...')
+      console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET)
+      console.log('NODE_ENV:', process.env.NODE_ENV)
       // For API routes, return 401 instead of redirect
       if (isProtectedApiRoute) {
         return NextResponse.json(
