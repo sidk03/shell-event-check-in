@@ -30,6 +30,8 @@ export async function middleware(request: NextRequest) {
     if (!payload) {
       console.log('Token verification failed for token:', token.substring(0, 20) + '...')
       console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET)
+      console.log('JWT_SECRET length:', process.env.JWT_SECRET?.length)
+      console.log('JWT_SECRET first 10 chars:', process.env.JWT_SECRET?.substring(0, 10))
       console.log('NODE_ENV:', process.env.NODE_ENV)
       // For API routes, return 401 instead of redirect
       if (isProtectedApiRoute) {
