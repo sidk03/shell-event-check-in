@@ -1,7 +1,7 @@
-import jwt from 'jsonwebtoken'
+import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 const TOKEN_NAME = 'admin-token'
 const TOKEN_MAX_AGE = 60 * 60 * 24 * 7 // 7 days in seconds
 
@@ -10,15 +10,22 @@ export interface TokenPayload {
   email: string
 }
 
-export function generateToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
+export async function generateToken(payload: TokenPayload): Promise<string> {
+  return await new SignJWT({ adminId: payload.adminId, email: payload.email })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(JWT_SECRET)
 }
 
-export function verifyToken(token: string): TokenPayload | null {
+export async function verifyToken(token: string): Promise<TokenPayload | null> {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload
-  } catch (error) {
-    console.log('JWT verification error:', error)
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    return {
+      adminId: payload.adminId as string,
+      email: payload.email as string
+    }
+  } catch {
     return null
   }
 }
