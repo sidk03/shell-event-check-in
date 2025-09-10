@@ -451,6 +451,11 @@ export default function ScanPage() {
                 placeholder="Enter university ID"
                 className="bg-background border-input"
                 autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && registerUniversityId.trim()) {
+                    handleRegisterUser()
+                  }
+                }}
               />
             </div>
             <div className="space-y-2">
@@ -462,6 +467,11 @@ export default function ScanPage() {
                 onChange={(e) => setRegisterName(e.target.value)}
                 placeholder="Enter student name"
                 className="bg-background border-input"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && registerUniversityId.trim()) {
+                    handleRegisterUser()
+                  }
+                }}
               />
             </div>
           </div>
