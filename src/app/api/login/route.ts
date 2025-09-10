@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { supabase, type Admin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { generateToken, setAuthCookie } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {

@@ -15,13 +15,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user exists with this university ID
-    let { data: user, error: userError } = await supabase
+    let { data: user } = await supabase
       .from('users')
       .select('*')
       .eq('university_id', university_id.trim())
       .single()
 
-    if (userError || !user) {
+    if (!user) {
       // User doesn't exist, create new user
       const { data: newUser, error: createError } = await supabase
         .from('users')
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const dateString = getTodayInEST()
 
     // Check if user already checked in today
-    const { data: existingCheckIn, error: checkInError } = await supabase
+    const { data: existingCheckIn } = await supabase
       .from('check_ins')
       .select('*')
       .eq('user_id', user.id)

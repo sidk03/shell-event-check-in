@@ -5,7 +5,7 @@ import Header from '@/components/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Users, Clock, Search, Calendar } from 'lucide-react'
+import { Users, Search, Calendar } from 'lucide-react'
 import { formatDateInEST } from '@/lib/dateUtils'
 
 type StatsData = {
@@ -94,7 +94,7 @@ export default function DashboardPage() {
       } else {
         setSearchError(data.error || 'User not found')
       }
-    } catch (error) {
+    } catch {
       setSearchError('Failed to fetch user history')
     } finally {
       setIsSearching(false)
@@ -145,7 +145,7 @@ export default function DashboardPage() {
             <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle>Event History</CardTitle>
-                <CardDescription>Today's event attendance</CardDescription>
+                <CardDescription>Today&apos;s event attendance</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -217,7 +217,7 @@ export default function DashboardPage() {
           <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle>Check-in History Lookup</CardTitle>
-              <CardDescription>Search for a student's check-in history by University ID</CardDescription>
+              <CardDescription>Search for a student&apos;s check-in history by University ID</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getTodayInEST } from '@/lib/dateUtils'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get today's date in EST
     const dateString = getTodayInEST()

@@ -120,7 +120,7 @@ export default function ScanPage() {
           universityId: data.user?.university_id || ''
         })
       }
-    } catch (error) {
+    } catch {
       setCheckInStatus('error')
       setStatusMessage('Failed to process check-in')
     } finally {
@@ -180,7 +180,7 @@ export default function ScanPage() {
         setCheckInStatus('error')
         setStatusMessage(data.error || 'Registration failed')
       }
-    } catch (error) {
+    } catch {
       setCheckInStatus('error')
       setStatusMessage('Failed to register user')
     } finally {
@@ -243,7 +243,7 @@ export default function ScanPage() {
         setCheckInStatus('error')
         setStatusMessage(data.error || 'Check-in failed')
       }
-    } catch (error) {
+    } catch {
       setCheckInStatus('error')
       setStatusMessage('Failed to process check-in')
     } finally {
@@ -311,7 +311,7 @@ export default function ScanPage() {
                   Keep this field focused for scanning
                 </p>
                 <p className="text-xs text-muted-foreground text-center mt-1 italic">
-                  Note: If scanner doesn't work, click inside the box above to refocus
+                  Note: If scanner doesn&apos;t work, click inside the box above to refocus
                 </p>
               </div>
             </CardContent>
@@ -437,7 +437,7 @@ export default function ScanPage() {
           <DialogHeader>
             <DialogTitle>New User Registration</DialogTitle>
             <DialogDescription>
-              This barcode is not registered. Please enter the student's information.
+              This barcode is not registered. Please enter the student&apos;s information.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const dateString = getTodayInEST()
 
     // Check if user already checked in today
-    const { data: existingCheckIn, error: checkInError } = await supabase
+    const { data: existingCheckIn } = await supabase
       .from('check_ins')
       .select('*')
       .eq('user_id', user.id)
