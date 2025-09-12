@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getTodayInEST } from '@/lib/dateUtils'
+import { isValidUniversityId, getUniversityIdError } from '@/lib/validation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +11,14 @@ export async function POST(request: NextRequest) {
     if (!university_id) {
       return NextResponse.json(
         { error: 'University ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate University ID format
+    if (!isValidUniversityId(university_id)) {
+      return NextResponse.json(
+        { error: getUniversityIdError(university_id) },
         { status: 400 }
       )
     }

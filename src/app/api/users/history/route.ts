@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { isValidUniversityId, getUniversityIdError } from '@/lib/validation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +10,14 @@ export async function GET(request: NextRequest) {
     if (!universityId) {
       return NextResponse.json(
         { error: 'University ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate University ID format
+    if (!isValidUniversityId(universityId)) {
+      return NextResponse.json(
+        { error: getUniversityIdError(universityId) },
         { status: 400 }
       )
     }

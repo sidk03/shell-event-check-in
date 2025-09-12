@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { isValidUniversityId, getUniversityIdError } from '@/lib/validation'
 
 type CheckInStatus = 'success' | 'already' | 'error' | null
 type CheckInResponse = {
@@ -153,6 +154,14 @@ export default function ScanPage() {
   const handleRegisterUser = async () => {
     if (!registerUniversityId.trim()) return
     
+    // Validate University ID format
+    if (!isValidUniversityId(registerUniversityId)) {
+      setCheckInStatus('error')
+      setStatusMessage(getUniversityIdError(registerUniversityId))
+      setShowRegistrationModal(false)
+      return
+    }
+    
     setIsLoading(true)
     try {
       const response = await fetch('/api/users/register', {
@@ -193,6 +202,13 @@ export default function ScanPage() {
   // Handle manual check-in
   const handleManualCheckIn = async () => {
     if (!manualUniversityId.trim()) return
+    
+    // Validate University ID format
+    if (!isValidUniversityId(manualUniversityId)) {
+      setCheckInStatus('error')
+      setStatusMessage(getUniversityIdError(manualUniversityId))
+      return
+    }
     
     setIsLoading(true)
     try {
@@ -334,7 +350,7 @@ export default function ScanPage() {
                   placeholder="Enter university ID"
                   className="bg-background border-input"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && manualUniversityId.trim()) {
+                    if (e.key === 'Enter' && isValidUniversityId(manualUniversityId)) {
                       handleManualCheckIn()
                     }
                   }}
@@ -350,7 +366,7 @@ export default function ScanPage() {
                   placeholder="Enter student name"
                   className="bg-background border-input"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && manualUniversityId.trim()) {
+                    if (e.key === 'Enter' && isValidUniversityId(manualUniversityId)) {
                       handleManualCheckIn()
                     }
                   }}
@@ -358,7 +374,7 @@ export default function ScanPage() {
               </div>
               <Button
                 onClick={handleManualCheckIn}
-                disabled={!manualUniversityId.trim() || isLoading}
+                disabled={!isValidUniversityId(manualUniversityId) || isLoading}
                 className="w-full"
               >
                 Check In
@@ -452,7 +468,7 @@ export default function ScanPage() {
                 className="bg-background border-input"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && registerUniversityId.trim()) {
+                  if (e.key === 'Enter' && isValidUniversityId(registerUniversityId)) {
                     handleRegisterUser()
                   }
                 }}
@@ -468,7 +484,7 @@ export default function ScanPage() {
                 placeholder="Enter student name"
                 className="bg-background border-input"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && registerUniversityId.trim()) {
+                  if (e.key === 'Enter' && isValidUniversityId(registerUniversityId)) {
                     handleRegisterUser()
                   }
                 }}
@@ -488,7 +504,7 @@ export default function ScanPage() {
             </Button>
             <Button
               onClick={handleRegisterUser}
-              disabled={!registerUniversityId.trim() || isLoading}
+              disabled={!isValidUniversityId(registerUniversityId) || isLoading}
             >
               Register & Check In
             </Button>
