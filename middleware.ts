@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 
 const protectedRoutes = ['/', '/dashboard', '/scan']
-const protectedApiRoutes = ['/api/check-in', '/api/users']
+const protectedApiRoutes = ['/api/check-in', '/api/users', '/api/export']
 const authRoutes = ['/login']
 
 export async function middleware(request: NextRequest) {
@@ -59,5 +59,6 @@ export const config = {
     '/login',
     '/api/check-in/:path*',
     '/api/users/:path*',
+    '/api/export/:path*',
   ]
 }

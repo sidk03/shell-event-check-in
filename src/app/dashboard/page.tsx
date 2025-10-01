@@ -5,7 +5,7 @@ import Header from '@/components/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Users, Search, Calendar } from 'lucide-react'
+import { Users, Search, Calendar, Download } from 'lucide-react'
 import { formatDateInEST } from '@/lib/dateUtils'
 
 type StatsData = {
@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const [userHistory, setUserHistory] = useState<UserHistory | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
 
   // Fetch statistics
   const fetchStats = async () => {
@@ -108,6 +109,36 @@ export default function DashboardPage() {
     setSearchError('')
   }
 
+  // Export all check-ins to CSV
+  const handleExportCSV = async () => {
+    setIsExporting(true)
+    try {
+      const response = await fetch('/api/export/csv', {
+        credentials: 'same-origin'
+      })
+
+      if (response.ok) {
+        // Create a blob from the CSV content
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `check-ins-export-${new Date().toISOString().split('T')[0]}.csv`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to export data')
+      }
+    } catch {
+      alert('Failed to export data')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   useEffect(() => {
     fetchStats()
     const interval = setInterval(fetchStats, 5000) // Refresh every 5 seconds
@@ -119,9 +150,20 @@ export default function DashboardPage() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Event statistics and check-in management</p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-muted-foreground mt-2">Event statistics and check-in management</p>
+          </div>
+          <Button
+            onClick={handleExportCSV}
+            disabled={isExporting}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isExporting ? 'Exporting...' : 'Export All Data'}
+          </Button>
         </div>
 
         <div className="space-y-8">
